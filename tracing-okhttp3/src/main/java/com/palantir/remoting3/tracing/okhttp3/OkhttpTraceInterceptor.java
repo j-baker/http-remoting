@@ -29,21 +29,10 @@ import okhttp3.Response;
 public enum OkhttpTraceInterceptor implements Interceptor {
     INSTANCE;
 
-    /** The HTTP header used to communicate API endpoint names internally. Not considered public API. */
-    public static final String PATH_TEMPLATE_HEADER = "hr-path-template";
-
     @Override
     public Response intercept(Chain chain) throws IOException {
         Request request = chain.request();
-
-        String spanName = "remote call to redacted url";
-        String httpRemotingPath = request.header(PATH_TEMPLATE_HEADER);
-        if (httpRemotingPath != null) {
-            spanName = httpRemotingPath;
-            request = request.newBuilder().removeHeader(PATH_TEMPLATE_HEADER).build();
-        }
-
-        OpenSpan span = Tracer.startSpan(spanName, SpanType.CLIENT_OUTGOING);
+        OpenSpan span = Tracer.startSpan("remote call to redacted url", SpanType.CLIENT_OUTGOING);
         Request.Builder tracedRequest = request.newBuilder()
                 .addHeader(TraceHttpHeaders.TRACE_ID, Tracer.getTraceId())
                 .addHeader(TraceHttpHeaders.SPAN_ID, span.getSpanId())
@@ -61,5 +50,4 @@ public enum OkhttpTraceInterceptor implements Interceptor {
 
         return response;
     }
-
 }
